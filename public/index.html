@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Булочка</title>
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Avenir, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-align: center;
+            color: #2c3e50;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+            margin-top: 60px;
+            background-color: #3f6080;
+        }
+
+        .container {
+            position: relative;
+            width: 90%;
+            max-width: 600px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333333;
+            margin-bottom: 15px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: none;
+            outline: none;
+            margin-bottom: 15px;
+        }
+
+        h1 span {
+            color: #007bff;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            color: #ffffff;
+            background-color: #3f6080;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .response-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9fafc;
+            border-left: 4px solid #294e72;
+            border-radius: 5px;
+            color: #333;
+            font-size: 16px;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+
+        #clearButton {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 50px;
+            height: 50px;
+            background: none;
+        }
+
+        #clearButton img {
+            width: 100%;
+            height: 100%;
+        }
+
+        #copyBar {
+            margin-top: 10px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #copyButton {
+            align-self: flex-end;
+            width: 50px;
+            padding: 10px;
+            background-color: #6892c0;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        #copyButton img {
+            height: 20px;
+        }
+
+        #copyButton:hover {
+            background-color: #007bff;
+        }
+
+        #notification {
+            flex: 1;
+            margin-top: 10px;
+            color: #007bff;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        #secretInput {
+            border: none;
+            margin-top: 5px;
+            padding: 3px 5px;
+            border-radius: 5px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <button id="clearButton" onclick="clearText()"><img src="https://img.icons8.com/?size=100&id=60644&format=png&color=000000"></button></button>
+        
+        <h1>Твой личный помощник <span>Булочка</span></h1>
+        <!-- Eingabefeld für die Benutzereingabe -->
+        <textarea id="userInput" placeholder="Загружается..."></textarea>
+
+        <!-- Button, der die Anfrage sendet -->
+        <button id="sendButton" onclick="sendRequest()">Отправить запрос</button>
+        
+        <div id="copyBar">
+            <div id="notification" style="visibility: hidden; color: #007bff;">Текст скопирован!</div>
+            <button id="copyButton" onclick="copyText()"><img
+                    src="https://img.icons8.com/?size=100&id=59773&format=png&color=000000"></img></button>
+        </div>
+
+        <div class="response-container" id="response">Ответ появляется здесь...</div>
+    </div>
+
+    <input type="password" id="secretInput" placeholder="Введите секретный код" />
+
+    <script>
+        async function sendRequest() {
+            const userInput = document.getElementById("userInput").value.trim();
+            const responseElement = document.getElementById("response");
+            const sendButton = document.getElementById("sendButton");
+            const secretInput = document.getElementById("secretInput").value;
+
+
+            if(!userInput || userInput.length === 0)
+                return;
+
+            if (!secretInput || secretInput.length === 0)
+                return;
+
+            // Disable the button and update the response container while loading
+            sendButton.disabled = true;
+            responseElement.textContent = "Загружается...";
+
+            try {
+                // Send the request to the backend API
+                const res = await fetch("/request", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ prompt: userInput, secret: secretInput }),
+                });
+
+
+                // Check if the response is successful
+                if (res.ok) {
+                    const data = await res.json();
+                    responseElement.textContent = data.choices[0].message.content; // Display the message response
+                } else {
+                    responseElement.textContent = "Ошибка: " + res.statusText; // Handle error in response
+                }
+            } catch (error) {
+                responseElement.textContent = "Ошибка: " + error.message; // Handle fetch error
+            } finally {
+                // Enable the button after the request is finished
+                sendButton.disabled = false;
+            }
+        }
+
+        function clearText() {
+            document.getElementById("userInput").value = "";
+        }
+
+        function copyText() {
+            const responseElement = document.getElementById("response");
+            const textToCopy = responseElement.textContent;
+
+            // Use the Clipboard API to copy the text
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // Show notification that the text was copied
+                showNotification();
+            }).catch(err => {
+                console.error("Failed to copy text: ", err);
+            });
+        }
+
+        function showNotification() {
+            const notificationElement = document.getElementById("notification");
+
+            notificationElement.style.visibility = "visible"; // Show the notification
+            setTimeout(() => {
+                notificationElement.style.visibility = "hidden"; // Hide after 3 seconds
+            }, 800);
+        }
+    </script>
+
+</body>
+
+</html>
