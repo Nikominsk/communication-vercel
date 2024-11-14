@@ -33,7 +33,7 @@ app.post('/request', async (req, res) => {
     }
 
 
-   const isMatch = await bcrypt.compare(secret, process.env.HELLO);
+   const isMatch = await bcrypt.compare(secret, "$2a$12$tK8/7Kj4.xAZ5QotcJyVfOsfU/KYfpAZ9dgqfXx7L70O5F25C1KQO");
     if (!isMatch) {
         return res.status(401).json({ message: "Unauthorized: Invalid secret code." });
     }
