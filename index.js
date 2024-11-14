@@ -17,8 +17,14 @@ app.get('/home', (req, res) => {
   res.status(200).json('Welcome, your app is working well');
 })
 
+app.get('/tmp', (req, res) => {
+  res.status(200).json('Welcome, your app is working well ' + process.env.OPEN_AI);
+})
+
 
 app.post('/request', async (req, res) => {
+
+    console.log('request call')
 
     if(req.body == null) {
         res.json(null);
@@ -32,11 +38,14 @@ app.post('/request', async (req, res) => {
         return;
     }
 
+    console.log('compare')
 
    const isMatch = await bcrypt.compare(secret, "$2a$12$tK8/7Kj4.xAZ5QotcJyVfOsfU/KYfpAZ9dgqfXx7L70O5F25C1KQO");
     if (!isMatch) {
         return res.status(401).json({ message: "Unauthorized: Invalid secret code." });
     }
+
+    console.log('last request')
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: 'POST',
@@ -50,6 +59,8 @@ app.post('/request', async (req, res) => {
         stream: false,
         }),
     });
+
+    console.log(response);
   
     const data = await response.json();
     res.status(200).json(data);
